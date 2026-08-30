@@ -1,6 +1,12 @@
 # TrueForge hosted on Render. Stamp's Python runs in Daytona, not in this web process.
-# After first deploy, set PUBLIC_BASE_URL to https://<this-service>.onrender.com
-# Gmail OAuth will fail until that origin is set.
+#
+# One-time setup after first deploy:
+#   1. Render will prompt you to fill in the sync:false vars below (OPENAI_API_KEY, etc.)
+#   2. Set PUBLIC_BASE_URL to https://<this-service>.onrender.com  ← required for Gmail OAuth
+#   3. In your Google Cloud OAuth client, add that URL as an authorized redirect URI
+#   4. Open the Render URL → Settings → Connectors → Add MCP Server → authorize Gmail
+#
+# Everything else (Postgres, Redis) is wired automatically.
 
 databases:
   - name: stamp-pg
@@ -24,8 +30,18 @@ services:
         value: "false"
       - key: HOST
         value: "0.0.0.0"
+
+      # Set this to your Render service URL after first deploy — Gmail OAuth fails without it
       - key: PUBLIC_BASE_URL
         sync: false
+
+      # API keys — Render will prompt you to fill these in the dashboard
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: DAYTONA_API_KEY
+        sync: false
+
+      # Postgres — auto-wired from the stamp-pg database above
       - key: POSTGRES_HOST
         fromDatabase:
           name: stamp-pg
@@ -46,6 +62,8 @@ services:
         fromDatabase:
           name: stamp-pg
           property: database
+
+      # Redis — auto-wired from the stamp-kv key-value store above
       - key: REDIS_URL
         fromService:
           name: stamp-kv
