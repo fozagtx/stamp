@@ -24,8 +24,8 @@ After Allow, open Gmail → Drafts. If the draft is not there, it did not work.
 |---|---|
 | Runtime | TrueForge (bundled chat). Not a custom UI. |
 | Model | OpenAI, configured in TrueForge Settings |
-| Inbox | Google Gmail MCP `https://gmailmcp.googleapis.com/mcp/v1` |
-| Write | Gmail **create_draft** (official MCP does not send). Gated `@write` |
+| Inbox | Composio MCP (provides Gmail integration) |
+| Write | Gmail **create_draft** via Composio. Gated `@write` |
 | Sandbox | Daytona |
 | Books | `demo/ledger.csv` / `skills/stamp/ledger.csv` read in the sandbox |
 | Skill | `skills/stamp/SKILL.md` |
@@ -42,19 +42,31 @@ npx @truefoundry/trueforge@latest
 
 Open `http://localhost:8790`.
 
-1. Settings → Models → OpenAI → API key.
-2. Settings → Sandbox providers → Daytona → API key (Sandboxes + Snapshots write).
-3. Settings → Connectors → Add MCP Server → URL `https://gmailmcp.googleapis.com/mcp/v1` → OAuth. Enable `gmailmcp.googleapis.com` on a Google Cloud project; add TrueForge’s callback origin to the OAuth client. Complete Connect in chat.
-4. Settings → Skills → Import this GitHub repo (or the `skills/stamp` pack).
-5. New agent from `agent/stamp.spec.json`: sandbox on, Gmail attached, skill `stamp`, subagents on, approval default `@write` / `@destructive`.
-6. Plant the three real emails in `demo/INBOX.md`.
-7. `Process my Acme invoices.` Deny once and check Drafts is empty. Allow once and check Drafts.
+**Setup Steps:**
+
+0. **Environment:** Copy `.env.example` to `.env`: `cp .env.example .env`
+1. **Models:** Settings → Models → OpenAI → Add your API key
+2. **Sandbox:** Settings → Sandbox providers → Daytona → Add API key (requires Sandboxes + Snapshots write permission)
+3. **Gmail Connector:** Settings → Connectors → Composio → Add API key and complete Gmail OAuth flow in chat
+   - Composio provides Gmail MCP integration (search threads, read messages, create drafts)
+   - The agent spec references "composio" as the MCP server name
+4. **Skills:** Settings → Skills → Import this GitHub repo (or add `skills/stamp` directory)
+5. **Create Agent:** Import `agent/stamp.spec.json` configuration
+   - Sandbox: enabled
+   - MCP server: composio
+   - Skill: stamp
+   - Subagents: enabled
+   - Approval policy: `@write` and `@destructive` tools require approval
+6. **Plant Test Emails:** Send the three test emails from `demo/INBOX.md` to your Gmail account
+7. **Test:** In TrueForge chat, say: `Process my Acme invoices.`
+   - First try: Click Deny and verify Gmail Drafts is empty
+   - Second try: Click Allow and verify the draft appears in Gmail Drafts
 
 Local SQLite is for that machine only. Gmail OAuth on localhost uses `PUBLIC_BASE_URL=http://localhost:8790` (or the port you chose).
 
 ## Render
 
-Yes. TrueForge hosted mode: one web service + Postgres + Redis. Stamp’s reconcile still runs in **Daytona**, not on the Render box.
+Yes. TrueForge hosted mode: one web service + Postgres + Redis. Stamp's reconcile still runs in **Daytona**, not on the Render box.
 
 ```bash
 # Blueprint: render.yaml
@@ -70,7 +82,7 @@ In the Render dashboard (or `render.yaml`):
 - `PUBLIC_BASE_URL` = the `https://*.onrender.com` origin. Required for Gmail OAuth.
 - Do not use SQLite/standalone on Render.
 
-Put OpenAI and Daytona keys in TrueForge Settings after boot (they live in TrueForge’s DB, not in this image). Same for the Gmail connector.
+Put OpenAI and Daytona keys in TrueForge Settings after boot (they live in TrueForge's DB, not in this image). Same for the Composio Gmail connector.
 
 Without OIDC, anyone who has the Render URL is admin. Enable OIDC for a shared host, or take the service down when you are done showing it.
 
@@ -79,6 +91,9 @@ Without OIDC, anyone who has the Render URL is admin. Enable OIDC for a shared h
 ```bash
 python3 -m pip install -r requirements.txt
 python3 -m pytest -q
+
+# Or using local virtualenv:
+.venv/bin/python -m pytest -q
 ```
 
 ```bash
@@ -99,4 +114,4 @@ Direct pushes to main do not count.
 
 ## TrueForge write-up (submission form)
 
-Stamp is a TrueForge agent. MCP reaches Gmail. The sandbox runs extract + reconcile. Skills hold the procedure. Subagents split mail vs numbers. TrueForge pauses on create_draft. The session is TrueForge’s. We did not wrap a chat model in a custom app.
+Stamp is a TrueForge agent. MCP reaches Gmail via Composio. The sandbox runs extract + reconcile. Skills hold the procedure. Subagents split mail vs numbers. TrueForge pauses on create_draft. The session is TrueForge's. We did not wrap a chat model in a custom app.
