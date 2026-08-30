@@ -28,7 +28,7 @@ ACTIONS = {
     "duplicate_paid": "dispute_duplicate",
     "new_unpaid": "confirm_new_invoice",
     "amount_mismatch": "escalate_mismatch",
-    "unknown_vendor": "escalate_unreadable",
+    "unknown_vendor": "escalate_mismatch",
     "partial": "escalate_mismatch",
     "unreadable": "escalate_unreadable",
 }
@@ -55,7 +55,11 @@ def _int_cents(value: Any) -> int | None:
         return None
     try:
         if "." in text:
-            return int(round(float(text) * 100)) if abs(float(text)) < 10_000_000 else int(float(text))
+            # Value has a decimal point → treat as dollar amount, convert to cents.
+            # The 10_000_000 guard was wrong: it silently dropped the ×100 for large
+            # invoices (e.g. $100,000.00 became 100000 instead of 10000000).
+            return int(round(float(text) * 100))
+        # No decimal → already expressed in cents (as stored in ledger CSV).
         return int(text)
     except ValueError:
         return None
