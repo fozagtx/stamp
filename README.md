@@ -10,103 +10,134 @@ No mocks. No simulated inbox. No fake send.
 
 ## What it does
 
-Same three Acme invoices in a real mailbox:
+Three Acme invoices in a real Gmail mailbox:
 
 | Mail | Books | Stamp does |
 |---|---|---|
-| Invoice #4412 · $4,200 | already paid | dispute draft, then wait |
+| Invoice #4412 · $4,200 | already paid | draft dispute → **wait for stamp** |
 | Reminder #4412 · $4,200 | same row | one dispute, not two |
-| Invoice #4419 · $890 | not on the ledger | confirm-pay draft, then wait |
+| Invoice #4419 · $890 | not on ledger | draft pay-confirm → **wait for stamp** |
 
 Prompt: `Process my Acme invoices.`
 
-After Allow, open Gmail → Drafts. If the draft is not there, it did not work.
+After you click **Allow**, open Gmail → Drafts. If the draft is not there, it did not work.
 
 ## Stack
 
 | Piece | What |
 |---|---|
 | Runtime | TrueForge (bundled chat). Not a custom UI. |
-| Model | OpenAI, configured in TrueForge Settings |
+| Model | OpenAI |
 | Inbox | Google Gmail MCP (`gmailmcp.googleapis.com`) |
-| Write | Gmail **create_draft** via official MCP. Gated `@write` |
-| Sandbox | Daytona |
-| Books | `demo/ledger.csv` / `skills/stamp/ledger.csv` read in the sandbox |
+| Write gate | TrueForge `@write` approval — pauses before `create_draft` |
+| Sandbox | Daytona — runs the reconcile Python, not the laptop |
+| Books | `demo/ledger.csv` — read in sandbox, not typed into prompt |
 | Skill | `skills/stamp/SKILL.md` |
 
-Python in this repo is the books check the sandbox runs. It is not a stand-in for Gmail.
+## Prerequisites
 
-## Local TrueForge
+Before you start, make sure you have:
 
-Needs Node 22+.
+- **Node 22+** — `node --version`
+- **OpenAI API key** — from [platform.openai.com](https://platform.openai.com/api-keys)
+- **Daytona API key** — from [app.daytona.io](https://app.daytona.io) (needs Sandboxes + Snapshots write)
+- **Google Cloud project** with Gmail API enabled and an OAuth 2.0 client (see step 3 below)
+
+## Run locally
 
 ```bash
-npx @truefoundry/trueforge@latest
+# Clone
+git clone https://github.com/fozagtx/stamp.git
+cd stamp
+
+# Copy env defaults (no secrets in this file)
+cp .env.example .env
+
+# Start TrueForge
+npx @truefoundry/trueforge@latest --port 8790
 ```
 
-Open `http://localhost:8790`.
+Open **[http://localhost:8790](http://localhost:8790)** — you should see the TrueForge chat UI.
 
-**Setup Steps:**
+## Configure TrueForge (one-time, in the UI)
 
-0. **Environment:** Copy `.env.example` to `.env`: `cp .env.example .env`
-1. **Models:** Settings → Models → OpenAI → Add your API key
-2. **Sandbox:** Settings → Sandbox providers → Daytona → Add API key (requires Sandboxes + Snapshots write permission)
-3. **Gmail Connector:** Settings → Connectors → Add MCP Server
-   - **URL:** `https://gmailmcp.googleapis.com/mcp/v1`
-   - **Transport:** Streamable HTTP
-   - Authorize via Google OAuth (you need a Google Cloud project with Gmail API enabled + OAuth consent screen)
-   - The agent spec references this as `"gmail"`
-4. **Skills:** Settings → Skills → Import this GitHub repo (or add `skills/stamp` directory)
-5. **Create Agent:** Import `agent/stamp.spec.json` configuration
-   - Sandbox: enabled
-   - MCP server: gmail (Google's official MCP)
-   - Skill: stamp
-   - Subagents: enabled
-   - Approval policy: `@write` and `@destructive` tools require approval
-6. **Plant Test Emails:** Send the three test emails from `demo/INBOX.md` to your Gmail account
-7. **Test:** In TrueForge chat, say: `Process my Acme invoices.`
-   - First try: Click Deny and verify Gmail Drafts is empty
-   - Second try: Click Allow and verify the draft appears in Gmail Drafts
+### 1 · Add OpenAI model
 
-Local SQLite is for that machine only. Gmail OAuth on localhost uses `PUBLIC_BASE_URL=http://localhost:8790` (or the port you chose).
+**Settings → Models → OpenAI → Add key**
 
-## Render
+Paste your `OPENAI_API_KEY`. Temperature 0.2 is set in the agent spec.
 
-Yes. TrueForge hosted mode: one web service + Postgres + Redis. Stamp's reconcile still runs in **Daytona**, not on the Render box.
+### 2 · Add Daytona sandbox
 
-```bash
-# Blueprint: render.yaml
-# After the first URL exists:
-#   PUBLIC_BASE_URL=https://<service>.onrender.com
+**Settings → Sandbox Providers → Daytona → Add key**
+
+Paste your `DAYTONA_API_KEY`. The reconcile Python runs here — not on your machine.
+
+### 3 · Connect Gmail MCP
+
+**Settings → Connectors → Add MCP Server**
+
+| Field | Value |
+|---|---|
+| Name | `gmail` |
+| URL | `https://gmailmcp.googleapis.com/mcp/v1` |
+| Transport | Streamable HTTP |
+
+Click **Connect** → Google OAuth popup → sign in with the Gmail account Stamp should read.
+
+> **Google Cloud setup (one-time):**
+> 1. [console.cloud.google.com](https://console.cloud.google.com) → your project → **Enable Gmail API**
+> 2. **APIs & Services → Credentials → Create OAuth 2.0 Client ID** (Web application)
+> 3. Authorized JavaScript origins: `http://localhost:8790`
+> 4. Authorized redirect URIs: `http://localhost:8790/auth/callback`
+> 5. Paste Client ID + Secret when TrueForge prompts during Connect
+
+### 4 · Import the skill
+
+**Settings → Skills → Import from GitHub** → `fozagtx/stamp`
+
+TrueForge finds `skills/stamp/SKILL.md` automatically.
+
+### 5 · Import the agent
+
+**Agents → Import** → upload `agent/stamp.spec.json` from this repo.
+
+This wires everything: Gmail connector, stamp skill, Daytona sandbox, `@write` approval policy.
+
+## Plant the test emails
+
+Follow `demo/INBOX.md` — send three real emails into the connected Gmail account:
+
+1. Invoice #4412 · $4,200 from Acme
+2. A reminder for #4412 (same amount)
+3. Invoice #4419 · $890 from Acme
+
+These must be real emails. The agent searches Gmail live — there are no fixtures in this repo.
+
+## Run the demo
+
+In TrueForge chat, type:
+
+```
+Process my Acme invoices.
 ```
 
-In the Render dashboard (or `render.yaml`):
+Watch it:
+1. **Gmail search + read** — ungated, no approval prompt
+2. **Daytona sandbox** — reconcile runs as Python, not prose
+3. **Table** — `#4412 duplicate_paid`, `#4419 new_unpaid`
+4. **Pause** — TrueForge shows `create_draft` tool call, asks Allow / Deny
 
-- Web: this Dockerfile (`@truefoundry/trueforge`, `STANDALONE=false`, `HOST=0.0.0.0`).
-- Postgres → `POSTGRES_*`.
-- Key Value / Redis → `REDIS_URL`.
-- `PUBLIC_BASE_URL` = the `https://*.onrender.com` origin. Required for Gmail OAuth.
-- Do not use SQLite/standalone on Render.
+**Try Deny first** → check Gmail Drafts → empty ✅  
+**Try Allow** → check Gmail Drafts → draft appears ✅
 
-Put OpenAI and Daytona keys in TrueForge Settings after boot (they live in TrueForge's DB, not in this image). Connect Gmail via Settings → Connectors → Add MCP Server after boot.
-
-Without OIDC, anyone who has the Render URL is admin. Enable OIDC for a shared host, or take the service down when you are done showing it.
-
-## Books check (sandbox)
+## Books check (local, no Gmail needed)
 
 ```bash
-python3 -m pip install -r requirements.txt
-python3 -m pytest -q
-
-# Or using local virtualenv:
+python3 -m venv .venv && .venv/bin/pip install -r requirements.txt
 .venv/bin/python -m pytest -q
+# 12 passed
 ```
-
-```bash
-python3 -m stamp.reconcile invoices.json demo/ledger.csv
-```
-
-`invoices.json` is produced from live Gmail thread text in the sandbox, not from fixtures.
 
 ## Qodo Code Review Evidence
 
