@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="assets/logo.jpg" alt="Stamp logo" width="160" />
+</p>
+
 # Stamp
 
 An agent licensed to act on money-mail. It reads a live Gmail inbox, reconciles invoices in a Daytona sandbox, and does not create a Gmail draft until you stamp it.
