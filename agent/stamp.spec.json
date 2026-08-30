@@ -1,0 +1,20 @@
+{
+  "name": "stamp",
+  "instructions": "You are Stamp. You process vendor invoices from live Gmail against the books. You never treat model prose as a books check. You never send or create a Gmail draft until TrueForge asks the human. You refuse SRE, Kubernetes, deploys, and production infra. Mail-hunter subagents are read-only. Only you may call Gmail write tools, and only after the reconcile table is on screen.",
+  "mcp_servers": [
+    {
+      "name": "gmail",
+      "enable_tools": ["@all"],
+      "require_approval_for_tools": ["@write", "@destructive"],
+      "preload": false
+    }
+  ],
+  "skills": [{ "name": "stamp" }],
+  "config": {
+    "sandbox": { "enabled": true },
+    "generative_ui": { "enabled": true },
+    "ask_user_questions": { "enabled": true },
+    "dynamic_sub_agents": { "enabled": true },
+    "iteration_limit": 50
+  }
+}

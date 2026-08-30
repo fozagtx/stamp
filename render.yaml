@@ -1,0 +1,53 @@
+# TrueForge hosted on Render. Stamp's Python runs in Daytona, not in this web process.
+# After first deploy, set PUBLIC_BASE_URL to https://<this-service>.onrender.com
+# Gmail OAuth will fail until that origin is set.
+
+databases:
+  - name: stamp-pg
+    databaseName: trueforge
+    user: trueforge
+    plan: basic-256mb
+
+services:
+  - type: keyvalue
+    name: stamp-kv
+    ipAllowList: []
+
+  - type: web
+    name: stamp
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    healthCheckPath: /healthz
+    envVars:
+      - key: STANDALONE
+        value: "false"
+      - key: HOST
+        value: "0.0.0.0"
+      - key: PUBLIC_BASE_URL
+        sync: false
+      - key: POSTGRES_HOST
+        fromDatabase:
+          name: stamp-pg
+          property: host
+      - key: POSTGRES_PORT
+        fromDatabase:
+          name: stamp-pg
+          property: port
+      - key: POSTGRES_USER
+        fromDatabase:
+          name: stamp-pg
+          property: user
+      - key: POSTGRES_PASSWORD
+        fromDatabase:
+          name: stamp-pg
+          property: password
+      - key: POSTGRES_DB
+        fromDatabase:
+          name: stamp-pg
+          property: database
+      - key: REDIS_URL
+        fromService:
+          name: stamp-kv
+          type: keyvalue
+          property: connectionString

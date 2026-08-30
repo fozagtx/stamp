@@ -1,0 +1,2 @@
+invoice_id,vendor,amount_cents,currency,status
+4412,acme,420000,usd,paid
