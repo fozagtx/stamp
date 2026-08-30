@@ -127,7 +127,36 @@ def test_unknown_vendor():
             "source_thread_id": "t8",
         }
     ]
-    assert reconcile(invoices, LEDGER)[0]["status"] == "unknown_vendor"
+    result = reconcile(invoices, LEDGER)[0]
+    assert result["status"] == "unknown_vendor"
+    # unknown_vendor escalates as mismatch (not unreadable) — bug fix: was escalate_unreadable
+    assert result["proposed_action"] == "escalate_mismatch"
+
+
+def test_large_invoice_cents_not_truncated():
+    """Regression: invoices ≥ $100k were stored as raw dollars due to a bad guard."""
+    ledger = [
+        {
+            "invoice_id": "BIG1",
+            "vendor": "acme",
+            "amount_cents": "10000000",  # $100,000.00 in cents
+            "currency": "usd",
+            "status": "paid",
+        }
+    ]
+    invoices = [
+        {
+            "invoice_id": "BIG1",
+            "vendor": "acme",
+            "amount_cents": 10000000,  # $100,000.00 in cents
+            "currency": "usd",
+            "source_thread_id": "t_big",
+        }
+    ]
+    result = reconcile(invoices, ledger)[0]
+    assert result["status"] == "duplicate_paid", (
+        f"Large invoice should match as duplicate_paid, got {result['status']}"
+    )
 
 
 def test_partial_ledger():

@@ -17,7 +17,7 @@ AMOUNT_RE = re.compile(
 )
 CURRENCY_RE = re.compile(r"\b(USD|GBP|EUR)\b", re.IGNORECASE)
 VENDOR_RE = re.compile(
-    r"(?:from|vendor|biller|company)[:\s]+([A-Za-z0-9 .&-]{2,80})",
+    r"(?:from|vendor|biller|company)[:\s]+([A-Za-z0-9 &-]{2,60}?)(?=[.,\n]|$|\s{2})",
     re.IGNORECASE,
 )
 
@@ -49,10 +49,16 @@ def extract_invoices(threads: list[dict[str, Any]]) -> list[dict[str, Any]]:
         invoice_id = invoice_match.group(1).lstrip("#") if invoice_match else ""
         amount_cents = dollars_string_to_cents(amount_match.group(1)) if amount_match else None
         currency = (currency_match.group(1) if currency_match else "USD").lower()
-        vendor_raw = vendor_match.group(1).strip() if vendor_match else sender
+        if vendor_match:
+            vendor_raw = vendor_match.group(1).strip()
+        elif "@" in sender:
+            # Fall back to the domain label before the first dot, e.g.
+            # billing@acme.example → "acme"; noreply@globex.co → "globex"
+            domain = sender.split("@", 1)[1]
+            vendor_raw = domain.split(".")[0]
+        else:
+            vendor_raw = sender
         vendor = normalize_vendor(vendor_raw)
-        if vendor not in {"acme"} and "acme" in text.lower():
-            vendor = "acme"
 
         found.append(
             {
