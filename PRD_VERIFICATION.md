@@ -25,13 +25,13 @@ python3 -m pytest tests/test_reconcile.py::test_duplicate_4412 -v
 **Requirement:** Live Gmail via MCP, create_draft requires TrueForge approval
 
 **Implementation:**
-- MCP server: Composio (provides Gmail integration)
+- MCP server: Google Gmail MCP (`gmailmcp.googleapis.com`)
 - Agent spec: `agent/stamp.spec.json` 
-  - `mcp_servers`: composio with `@all` tools enabled
+  - `mcp_servers`: gmail with `@all` tools enabled
   - `require_approval_for_tools`: `["@write", "@destructive"]`
 - Read tools (search, get thread): ungated
 - Write tool (create_draft): gated by `@write` policy
-- No send in this version (Composio create_draft makes a draft, doesn't send)
+- No send in this version (Gmail MCP create_draft makes a draft, doesn't send)
 
 **Evidence:**
 - Agent spec declares approval requirement
@@ -65,7 +65,7 @@ python3 -m pytest tests/test_reconcile.py::test_duplicate_4412 -v
 - [x] Model: OpenAI (agent spec: `"openai/gpt-5-6-sol"`)
 - [x] Temperature: 0.2 for books work (agent spec)
 - [x] Sandbox: Daytona enabled (agent spec: `"sandbox": {"enabled": true}`)
-- [x] MCP: Composio for Gmail (agent spec: `"name": "composio"`)
+- [x] MCP: Google Gmail MCP (agent spec: `"name": "gmail"`)
 - [x] Approval: `@write` and `@destructive` (agent spec)
 - [x] Subagents: dynamic enabled (agent spec)
 - [x] Skills: stamp skill by name (agent spec: `"skills": [{"name": "stamp"}]`)
@@ -102,7 +102,7 @@ python3 -m pytest tests/test_reconcile.py::test_duplicate_4412 -v
 
 #### 4. Agent Spec ✅
 - [x] Short instructions (role)
-- [x] Composio connector attached
+- [x] Gmail MCP connector attached
 - [x] Skill `stamp` loaded
 - [x] Sandbox on
 - [x] Subagents on
@@ -117,7 +117,7 @@ python3 -m pytest tests/test_reconcile.py::test_duplicate_4412 -v
 - [x] No .eml files, no runtime fixture inbox
 
 #### 6. Submission Docs ✅
-- [x] README: TrueForge setup, OpenAI, Daytona, Composio config, demo prompt
+- [x] README: TrueForge setup, OpenAI, Daytona, Gmail MCP config, demo prompt
 - [x] README: harness features mapped to job (MCP, sandbox, approval, skill, subagents)
 - [x] README: secrets policy (gitignored, .env.example only)
 - [x] README: "Qodo Code Review Evidence" placeholder
@@ -180,7 +180,7 @@ pytest tests/test_reconcile.py::test_new_4419
 - [x] Placeholder variable names only
 - [x] No real keys
 - [x] Comments explain where to set (TrueForge UI)
-- [x] Documents: OPENAI_API_KEY, DAYTONA_API_KEY, COMPOSIO_API_KEY
+- [x] Documents: OPENAI_API_KEY, DAYTONA_API_KEY
 
 ### Repo & Qodo ✅
 
@@ -203,7 +203,7 @@ pytest tests/test_reconcile.py::test_new_4419
 
 **Implementation:** Documentation and agent spec require:
 - TrueForge running (local or Render)
-- Composio connector configured with Gmail OAuth
+- Gmail MCP connector configured with Gmail OAuth
 - Daytona sandbox provider configured
 - OpenAI model configured
 
@@ -217,7 +217,7 @@ pytest tests/test_reconcile.py::test_new_4419
 
 ### Critical Path (Stories 1-7, 12-14)
 - [x] **US1:** Process Acme invoices in one turn → `extract` + `reconcile` + `table` in skill
-- [x] **US2:** Read real Gmail via TrueForge MCP → Composio connector in agent spec
+- [x] **US2:** Read real Gmail via TrueForge MCP → Gmail MCP connector in agent spec
 - [x] **US3:** Attachments and body considered → `extract.py` processes body text (attachments: best-effort)
 - [x] **US4:** Reconcile in sandbox as code → `stamp/reconcile.py` runs in Daytona
 - [x] **US5:** #4412 marked duplicate/paid → test_duplicate_4412 passes
@@ -225,7 +225,7 @@ pytest tests/test_reconcile.py::test_new_4419
 - [x] **US7:** #4419 marked new/unpaid → test_new_4419 passes
 - [x] **US12:** Stop before send → `@write` approval in agent spec
 - [x] **US13:** Tool name/args visible at pause → TrueForge default behavior
-- [x] **US14:** Allow creates draft in Gmail → Composio create_draft tool (real write)
+- [x] **US14:** Allow creates draft in Gmail → Gmail MCP create_draft tool (real write)
 
 ### Classification (Stories 8-10, 28-30)
 - [x] **US8:** Unknown vendor marked → test_unknown_vendor passes
@@ -254,7 +254,7 @@ pytest tests/test_reconcile.py::test_new_4419
 - [x] **US42:** OpenAI provider → agent spec line 3
 - [x] **US43:** Local TrueForge via npx → README line 39
 - [x] **US44:** Daytona sandbox → agent spec line 16
-- [x] **US45:** Gmail in TrueForge Settings → Composio → README line 51
+- [x] **US45:** Gmail in TrueForge Settings → Connectors → Add MCP Server → README line 51
 - [x] **US46:** Build halts if missing → README states no degraded path
 - [x] **US47:** Unit tests for Reconcile only → tests/ directory
 
@@ -297,12 +297,12 @@ pytest tests/test_reconcile.py::test_new_4419
 
 **Key Dependencies:**
 - TrueForge (MCP, sandbox, approval, sessions)
-- Composio (Gmail MCP integration)
+- Google Gmail MCP connector
 - Daytona (sandbox provider)
 - OpenAI (model provider)
 
 **No Simulations:**
-- Live Gmail via Composio
+- Live Gmail via Google Gmail MCP
 - Live Daytona sandbox
 - Live TrueForge approval on create_draft
 

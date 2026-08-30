@@ -24,8 +24,8 @@ After Allow, open Gmail → Drafts. If the draft is not there, it did not work.
 |---|---|
 | Runtime | TrueForge (bundled chat). Not a custom UI. |
 | Model | OpenAI, configured in TrueForge Settings |
-| Inbox | Composio MCP (provides Gmail integration) |
-| Write | Gmail **create_draft** via Composio. Gated `@write` |
+| Inbox | Google Gmail MCP (`gmailmcp.googleapis.com`) |
+| Write | Gmail **create_draft** via official MCP. Gated `@write` |
 | Sandbox | Daytona |
 | Books | `demo/ledger.csv` / `skills/stamp/ledger.csv` read in the sandbox |
 | Skill | `skills/stamp/SKILL.md` |
@@ -47,13 +47,15 @@ Open `http://localhost:8790`.
 0. **Environment:** Copy `.env.example` to `.env`: `cp .env.example .env`
 1. **Models:** Settings → Models → OpenAI → Add your API key
 2. **Sandbox:** Settings → Sandbox providers → Daytona → Add API key (requires Sandboxes + Snapshots write permission)
-3. **Gmail Connector:** Settings → Connectors → Composio → Add API key and complete Gmail OAuth flow in chat
-   - Composio provides Gmail MCP integration (search threads, read messages, create drafts)
-   - The agent spec references "composio" as the MCP server name
+3. **Gmail Connector:** Settings → Connectors → Add MCP Server
+   - **URL:** `https://gmailmcp.googleapis.com/mcp/v1`
+   - **Transport:** Streamable HTTP
+   - Authorize via Google OAuth (you need a Google Cloud project with Gmail API enabled + OAuth consent screen)
+   - The agent spec references this as `"gmail"`
 4. **Skills:** Settings → Skills → Import this GitHub repo (or add `skills/stamp` directory)
 5. **Create Agent:** Import `agent/stamp.spec.json` configuration
    - Sandbox: enabled
-   - MCP server: composio
+   - MCP server: gmail (Google's official MCP)
    - Skill: stamp
    - Subagents: enabled
    - Approval policy: `@write` and `@destructive` tools require approval
@@ -82,7 +84,7 @@ In the Render dashboard (or `render.yaml`):
 - `PUBLIC_BASE_URL` = the `https://*.onrender.com` origin. Required for Gmail OAuth.
 - Do not use SQLite/standalone on Render.
 
-Put OpenAI and Daytona keys in TrueForge Settings after boot (they live in TrueForge's DB, not in this image). Same for the Composio Gmail connector.
+Put OpenAI and Daytona keys in TrueForge Settings after boot (they live in TrueForge's DB, not in this image). Connect Gmail via Settings → Connectors → Add MCP Server after boot.
 
 Without OIDC, anyone who has the Render URL is admin. Enable OIDC for a shared host, or take the service down when you are done showing it.
 
@@ -114,4 +116,4 @@ Direct pushes to main do not count.
 
 ## TrueForge write-up (submission form)
 
-Stamp is a TrueForge agent. MCP reaches Gmail via Composio. The sandbox runs extract + reconcile. Skills hold the procedure. Subagents split mail vs numbers. TrueForge pauses on create_draft. The session is TrueForge's. We did not wrap a chat model in a custom app.
+Stamp is a TrueForge agent. MCP reaches Gmail via Google's official Gmail MCP (`gmailmcp.googleapis.com`). The sandbox runs extract + reconcile. Skills hold the procedure. Subagents split mail vs numbers. TrueForge pauses on create_draft. The session is TrueForge's. We did not wrap a chat model in a custom app.

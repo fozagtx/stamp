@@ -9,7 +9,7 @@
 ## What This Project Does
 
 Stamp is a TrueForge agent that prevents duplicate invoice payments by:
-1. Reading vendor invoices from live Gmail (via Composio MCP)
+1. Reading vendor invoices from live Gmail (via Google Gmail MCP)
 2. Running reconciliation in a Daytona sandbox against a ledger
 3. Flagging duplicates and requiring human approval before creating Gmail drafts
 
@@ -26,7 +26,7 @@ Stamp is a TrueForge agent that prevents duplicate invoice payments by:
 - **Evidence:** 10 test cases, all passing
 
 ### ✅ 2. Gmail Read + Approval-Gated Write
-- **Integration:** Composio MCP provides Gmail access
+- **Integration:** Google Gmail MCP provides Gmail access
 - **Read:** Search and get threads (ungated)
 - **Write:** create_draft requires TrueForge approval (`@write` policy)
 - **Evidence:** Agent spec declares approval policy, README documents Allow/Deny flow
@@ -116,7 +116,7 @@ tests/test_reconcile.py::test_partial_ledger PASSED                 [100%]
 **Demo Prompt:** `Process my Acme invoices.`
 
 **Expected Flow:**
-1. Agent searches Gmail via Composio
+1. Agent searches Gmail via Google Gmail MCP
 2. Extracts invoice details from thread bodies
 3. Runs reconciliation in Daytona sandbox
 4. Shows Generative UI table with results
@@ -131,7 +131,7 @@ tests/test_reconcile.py::test_partial_ledger PASSED                 [100%]
 
 | Feature | How Stamp Uses It |
 |---|---|
-| **MCP Connectors** | Composio provides Gmail search, read, create_draft |
+| **MCP Connectors** | Google Gmail MCP provides search, read, create_draft |
 | **Sandbox** | Daytona runs reconcile code with ledger CSV |
 | **Approval** | `@write` policy gates create_draft tool |
 | **Skills** | Git-backed procedure loaded by name |
@@ -148,7 +148,7 @@ tests/test_reconcile.py::test_partial_ledger PASSED                 [100%]
 ```bash
 npx @truefoundry/trueforge@latest
 # Open http://localhost:8790
-# Configure: OpenAI, Daytona, Composio in Settings
+# Configure: OpenAI, Daytona, Gmail MCP in Settings
 # Import agent/stamp.spec.json
 ```
 
@@ -226,7 +226,7 @@ git push -u origin feature/initial-implementation
 - [x] No mocks, no simulations (live Gmail, live Daytona, live approval)
 - [x] Reconcile catches duplicate #4412
 - [x] OpenAI model provider
-- [x] Composio MCP for Gmail
+- [x] Google Gmail MCP for Gmail
 - [x] Daytona sandbox enabled
 - [x] Approval on write tools
 - [x] Skill loaded by name
@@ -278,8 +278,8 @@ git push -u origin feature/initial-implementation
 - `render.yaml` - Deployment blueprint
 
 **Documentation:**
-- `README.md` - Setup and usage (updated for Composio)
-- `SUBMISSION.md` - Hackathon write-up (updated for Composio)
+- `README.md` - Setup and usage (updated for Google Gmail MCP)
+- `SUBMISSION.md` - Hackathon write-up (updated for Google Gmail MCP)
 - `PRD_VERIFICATION.md` - Requirements compliance (new)
 - `PR_CHECKLIST.md` - Qodo workflow (new)
 - `COMPLETION_SUMMARY.md` - This file (new)

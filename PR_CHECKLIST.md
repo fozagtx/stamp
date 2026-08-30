@@ -15,7 +15,7 @@ This checklist ensures the first PR is ready for Qodo review and meets hackathon
 
 ### Documentation
 - [x] README.md has clear setup instructions
-- [x] README.md documents the Stack (TrueForge, Composio, Daytona, OpenAI)
+- [x] README.md documents the Stack (TrueForge, Google Gmail MCP, Daytona, OpenAI)
 - [x] README.md has "Qodo Code Review Evidence" placeholder
 - [x] SUBMISSION.md ready for hackathon form
 - [x] demo/INBOX.md explains how to plant test emails
@@ -23,7 +23,7 @@ This checklist ensures the first PR is ready for Qodo review and meets hackathon
 - [x] agent/stamp.spec.json is configured correctly
 
 ### Agent Configuration
-- [x] Agent spec references "composio" MCP server
+- [x] Agent spec references "gmail" MCP server
 - [x] Sandbox enabled in agent spec
 - [x] Subagents enabled
 - [x] Approval policy: `@write` and `@destructive`
@@ -57,7 +57,7 @@ git commit -m "feat: implement Stamp invoice reconciliation agent
 - Add reconcile module with duplicate detection
 - Add extract module for Gmail thread parsing
 - Add 11 test cases covering PRD scenarios
-- Add TrueForge agent spec with Composio MCP
+- Add TrueForge agent spec with Google Gmail MCP
 - Add stamp skill with subagent procedures
 - Add documentation and deployment configs
 "
@@ -79,7 +79,7 @@ Implements Stamp, a TrueForge agent that reconciles vendor invoices from Gmail a
 - **Core Logic:** `stamp/reconcile.py` - Books check that flags duplicate invoices
 - **Extraction:** `stamp/extract.py` - Parse invoice details from Gmail threads
 - **Tests:** 11 pytest cases covering duplicate detection, vendor aliases, currency mismatches
-- **Agent:** TrueForge agent spec with Composio (Gmail), Daytona (sandbox), approval on writes
+- **Agent:** TrueForge agent spec with Google Gmail MCP, Daytona (sandbox), approval on writes
 - **Skill:** `skills/stamp/SKILL.md` - Procedure for mail-hunter and numbers subagents
 - **Demo:** Ledger CSV and inbox setup instructions
 
@@ -89,7 +89,7 @@ python3 -m pytest -v  # All 11 tests pass
 ```
 
 ## TrueForge Features Used
-- MCP: Composio connector for Gmail (search, read, create_draft)
+- MCP: Gmail MCP connector for Gmail (search, read, create_draft)
 - Sandbox: Daytona runs reconcile code
 - Approval: `@write` tools gated by TrueForge
 - Skills: Git-backed procedure
