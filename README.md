@@ -8,6 +8,22 @@ An agent licensed to act on money-mail. It reads a live Gmail inbox, reconciles 
 
 No mocks. No simulated inbox. No fake send.
 
+## What does it do?
+
+Stamp reads your Gmail for vendor invoices, checks each one against a ledger of what you have already paid, and produces a decision table — duplicate, new, mismatch, or unknown. For each actionable invoice it drafts a reply (dispute or pay-confirm). Then it stops and waits.
+
+Nothing leaves your account until you click **Allow** in TrueForge. If you click **Deny**, no draft is created. The analysis stays on screen so you can adjust and try again.
+
+The full flow in one sentence: **read mail → check books in a sandbox → show table → wait for human stamp → create draft**.
+
+## What problem does it solve, and who is it for?
+
+**The problem:** Vendor reminders look identical to new invoices. A "friendly nudge" on an invoice you already paid is indistinguishable from a new bill. Chat-based AI tools will happily draft a payment confirmation from the email text alone — without ever checking your records. If the agent can also send, that draft becomes a real duplicate payment or a commitment you cannot unsay.
+
+**The fix Stamp provides:** It separates *reading and reasoning* (which the model does) from *sending* (which only you do). The reconciliation runs as real Python code in a Daytona sandbox — not as model prose — so amounts and invoice IDs are compared as integers, not guessed. TrueForge's `@write` approval gate is the licence: the model is licensed to act on money-mail up to the point of sending, and no further.
+
+**Who it is for:** Solo operators, freelancers, and small finance teams who receive vendor invoices by email and want an automated first-pass books check without handing an AI the ability to send payments on their behalf.
+
 ## What it does
 
 Three Acme invoices in a real Gmail mailbox:
